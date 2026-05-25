@@ -39,10 +39,11 @@ Run once per day (full pipeline):
 Or step by step:
 
 ```bash
-python3 geocode.py && python3 send_report.py && python3 reschedule_automation.py && python3 merge_pr.py
+python3 geocode.py && python3 publish_release.py && python3 send_report.py && python3 reschedule_automation.py && python3 merge_pr.py
 ```
 
 - `geocode.py` — geocodes up to 40,000 pending POIs (4 keys × 10k), appends to `geocoded_results.csv`
+- `publish_release.py` — uploads cumulative `geocoded_results.csv` to GitHub Releases for download
 - `send_report.py` — posts progress comment on the GitHub tracking issue
 - `reschedule_automation.py` — advances the next run by **1 hour** (updates `.cursor/automation.json` and `.github/workflows/trigger-daily-geocode.yml`, then commits to `main`)
 - `merge_pr.py` — opens and merges a PR for the current branch into `main` (falls back to `git merge` if the GitHub app token cannot create PRs)

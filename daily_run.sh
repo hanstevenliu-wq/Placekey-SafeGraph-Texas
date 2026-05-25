@@ -14,6 +14,7 @@ else
   echo "geocoded_results.csv: missing (no successful geocodes yet)" >&2
 fi
 
+"$PYTHON" publish_release.py
 "$PYTHON" send_report.py
 "$PYTHON" reschedule_automation.py
 "$PYTHON" merge_pr.py
