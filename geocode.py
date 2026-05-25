@@ -29,7 +29,7 @@ KEY_STATUS_JSON = OUTPUT_DIR / "key_status.json"
 API_URL = "https://api.placekey.io/v1/placekeys"
 BATCH_SIZE = 100
 QUERIES_PER_KEY = 10_000
-SAVE_EVERY_N_BATCHES = 5
+SAVE_EVERY_N_BATCHES = 1
 
 API_KEY_SPECS: list[tuple[str, tuple[str, ...]]] = [
     ("utsa", ("PLACEKEY_UTSA", "placekey_utsa")),
@@ -154,13 +154,45 @@ def flatten_result(row: pd.Series, api_result: dict, key_label: str) -> dict:
     }
 
 
-def append_results(rows: list[dict]) -> None:
-    if not rows:
-        return
+def is_successful_row(row: dict) -> bool:
+    placekey = row.get("placekey")
+    if placekey is None:
+        return False
+    value = str(placekey).strip()
+    return value != "" and value.lower() != "nan"
+
+
+def ensure_output_csv() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    new_df = pd.DataFrame(rows, columns=OUTPUT_COLUMNS)
-    write_header = not OUTPUT_CSV.exists()
+    if not OUTPUT_CSV.exists():
+        pd.DataFrame(columns=OUTPUT_COLUMNS).to_csv(OUTPUT_CSV, index=False)
+
+
+def append_results(rows: list[dict]) -> int:
+    successful = [row for row in rows if is_successful_row(row)]
+    if not successful:
+        return 0
+    ensure_output_csv()
+    new_df = pd.DataFrame(successful, columns=OUTPUT_COLUMNS)
+    write_header = OUTPUT_CSV.stat().st_size == 0
     new_df.to_csv(OUTPUT_CSV, mode="a", index=False, header=write_header)
+    return len(successful)
+
+
+def verify_output_csv(*, saved_this_run: int) -> None:
+    if saved_this_run == 0:
+        return
+    if not OUTPUT_CSV.exists():
+        print(
+            f"ERROR: Expected {OUTPUT_CSV} after saving {saved_this_run:,} rows, but file is missing.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    total_rows = len(pd.read_csv(OUTPUT_CSV, dtype=str))
+    print(
+        f"CSV saved: {saved_this_run:,} successful geocodes this run; "
+        f"{total_rows:,} total rows in {OUTPUT_CSV}"
+    )
 
 
 def save_progress(
@@ -168,6 +200,7 @@ def save_progress(
     total_rows: int,
     completed_rows: int,
     processed_this_run: int,
+    saved_this_run: int,
     key_status: dict,
 ) -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -176,8 +209,10 @@ def save_progress(
         "completed_rows": completed_rows,
         "remaining_rows": max(total_rows - completed_rows, 0),
         "processed_this_run": processed_this_run,
+        "saved_this_run": saved_this_run,
         "daily_quota": QUERIES_PER_KEY * len(API_KEY_SPECS),
         "output_file": str(OUTPUT_CSV),
+        "output_csv_exists": OUTPUT_CSV.exists(),
         "last_run_utc": pd.Timestamp.utcnow().isoformat(),
     }
     PROGRESS_JSON.write_text(json.dumps(progress, indent=2))
@@ -199,6 +234,8 @@ def main() -> None:
     run_limit = os.environ.get("DAILY_LIMIT", "").strip()
     max_total = int(run_limit) if run_limit else QUERIES_PER_KEY * len(api_keys)
 
+    ensure_output_csv()
+
     addresses = load_addresses()
     completed_ids = load_completed_ids()
     pending = addresses[~addresses["safegraph_place_id"].isin(completed_ids)].copy()
@@ -209,6 +246,7 @@ def main() -> None:
             total_rows=len(addresses),
             completed_rows=len(completed_ids),
             processed_this_run=0,
+            saved_this_run=0,
             key_status={label: {"status": "skipped", "queries_this_run": 0} for label, _ in api_keys},
         )
         return
@@ -221,6 +259,7 @@ def main() -> None:
     session = requests.Session()
     results_buffer: list[dict] = []
     processed_this_run = 0
+    saved_this_run = 0
     pending_index = 0
     key_status: dict[str, dict] = {}
 
@@ -290,7 +329,7 @@ def main() -> None:
             )
 
             if batches_since_save >= SAVE_EVERY_N_BATCHES:
-                append_results(results_buffer)
+                saved_this_run += append_results(results_buffer)
                 results_buffer = []
                 batches_since_save = 0
 
@@ -302,13 +341,15 @@ def main() -> None:
                 "queries_this_run": key_processed,
             }
 
-    append_results(results_buffer)
+    saved_this_run += append_results(results_buffer)
 
     completed_rows = len(load_completed_ids())
+    verify_output_csv(saved_this_run=saved_this_run)
     save_progress(
         total_rows=len(addresses),
         completed_rows=completed_rows,
         processed_this_run=processed_this_run,
+        saved_this_run=saved_this_run,
         key_status=key_status,
     )
     remaining = len(addresses) - completed_rows
