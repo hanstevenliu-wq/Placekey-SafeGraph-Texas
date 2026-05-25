@@ -63,19 +63,24 @@ Output:
 | `DAILY_LIMIT` | `40000` | Max rows per run |
 | `REQUEST_SLEEP_SECONDS` | `0.2` | Pause between batches |
 | `GITHUB_REPO` | `hanstevenliu-wq/Placekey-SafeGraph-Texas` | Target repo for reports |
+| `CURSOR_API_KEY` | — | Optional: update Cursor automation cron via API |
+| `GIT_COMMIT_SCHEDULE` | `1` | Set `0` to skip git commit in `reschedule_automation.py` |
 
 ## Cursor automation
 
 1. Push this repo to GitHub.
 2. Create a Cursor Cloud Environment pointing at the repo.
-3. Add the four Placekey secrets.
-4. Schedule a daily automation:
+3. Add the four Placekey secrets and `GITHUB_TOKEN` (issues write) for daily reports.
+4. Create a Cursor automation with a **webhook** trigger (recommended) and prompt:
 
 ```bash
-python geocode.py && python send_report.py
+./daily_run.sh
 ```
 
-5. Snapshot the environment after the first run so results persist.
+5. Add GitHub repo secret `CURSOR_AUTOMATION_WEBHOOK_URL` (from the automation’s webhook settings). The workflow `.github/workflows/trigger-daily-geocode.yml` POSTs to that URL on the schedule in `.cursor/automation.json` (starts at **06:00 UTC**, +1 hour after each run).
+6. Snapshot the environment after the first run so results persist.
+
+`merge_pr.py` merges automation code changes into `main` automatically after each run. Optional: `CURSOR_API_KEY` if Cursor exposes an automation schedule API for your team.
 
 ## Notes
 
