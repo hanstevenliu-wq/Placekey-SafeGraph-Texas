@@ -71,11 +71,7 @@ Output:
 1. Push this repo to GitHub.
 2. Create a Cursor Cloud Environment pointing at the repo.
 3. Add the four Placekey secrets and `GITHUB_TOKEN` (issues write) for daily reports.
-4. Create a Cursor automation with a **webhook** trigger (recommended) and prompt:
-
-```bash
-./daily_run.sh
-```
+4. Create a Cursor automation with a **webhook** trigger (recommended). Paste the prompt from [`.cursor/automation-prompt.md`](.cursor/automation-prompt.md) (or run `./daily_run.sh` as the one-line version).
 
 5. Add GitHub repo secret `CURSOR_AUTOMATION_WEBHOOK_URL` (from the automation’s webhook settings). The workflow `.github/workflows/trigger-daily-geocode.yml` POSTs to that URL on the schedule in `.cursor/automation.json` (starts at **06:00 UTC**, +1 hour after each run).
 6. Snapshot the environment after the first run so results persist.

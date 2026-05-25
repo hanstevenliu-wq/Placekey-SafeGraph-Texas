@@ -28,6 +28,8 @@ pip install -r requirements.txt
 
 ### Daily automation
 
+**Cursor automation prompt:** copy from [`.cursor/automation-prompt.md`](.cursor/automation-prompt.md) into your automation at [cursor.com/automations](https://cursor.com/automations) (automation id in `.cursor/automation.json`).
+
 Run once per day (full pipeline):
 
 ```bash
