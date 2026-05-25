@@ -17,11 +17,15 @@ jobs:
       - name: Trigger Cursor automation webhook
         env:
           WEBHOOK_URL: ${{ secrets.CURSOR_AUTOMATION_WEBHOOK_URL }}
+          WEBHOOK_AUTH: ${{ secrets.CURSOR_AUTOMATION_WEBHOOK_AUTH }}
         run: |
           if [ -z "$WEBHOOK_URL" ]; then
             echo "CURSOR_AUTOMATION_WEBHOOK_URL is not set; skipping webhook trigger."
             exit 0
           fi
-          curl -fsS -X POST "$WEBHOOK_URL" \
-            -H "Content-Type: application/json" \
+          CURL_ARGS=(-fsS -X POST "$WEBHOOK_URL" -H "Content-Type: application/json")
+          if [ -n "$WEBHOOK_AUTH" ]; then
+            CURL_ARGS+=(-H "$WEBHOOK_AUTH")
+          fi
+          curl "${CURL_ARGS[@]}" \
             -d '{"source":"github-actions","workflow":"trigger-daily-geocode"}'

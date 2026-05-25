@@ -73,10 +73,48 @@ Output:
 3. Add the four Placekey secrets and `GITHUB_TOKEN` (issues write) for daily reports.
 4. Create a Cursor automation with a **webhook** trigger (recommended). Paste the prompt from [`.cursor/automation-prompt.md`](.cursor/automation-prompt.md) (or run `./daily_run.sh` as the one-line version).
 
-5. Add GitHub repo secret `CURSOR_AUTOMATION_WEBHOOK_URL` (from the automation’s webhook settings). The workflow `.github/workflows/trigger-daily-geocode.yml` POSTs to that URL on the schedule in `.cursor/automation.json` (starts at **06:00 UTC**, +1 hour after each run).
+5. Wire the webhook to GitHub Actions (see **Webhook setup** below).
 6. Snapshot the environment after the first run so results persist.
 
 `merge_pr.py` merges automation code changes into `main` automatically after each run. Optional: `CURSOR_API_KEY` if Cursor exposes an automation schedule API for your team.
+
+## Webhook setup
+
+Your Cursor automation already uses a **Webhook triggered** entry (copy icon next to the URL). Connect it to the repo scheduler like this:
+
+### A. In Cursor (you’ve mostly done this)
+
+1. Open **SafeGraph Texas Daily Geocoding** at [cursor.com/automations](https://cursor.com/automations).
+2. Under **Triggers**, keep **Webhook triggered** (remove any separate **Scheduled** cron on this automation to avoid double runs).
+3. Copy the full webhook URL (`https://api2.cursor.sh/aut...`).
+4. Click **Generate auth header** and copy the full header line (e.g. `Authorization: Bearer …`).
+
+### B. In GitHub
+
+1. Repo **Settings → Secrets and variables → Actions → New repository secret**
+2. Add:
+
+| Secret | Value |
+| --- | --- |
+| `CURSOR_AUTOMATION_WEBHOOK_URL` | The webhook URL from Cursor |
+| `CURSOR_AUTOMATION_WEBHOOK_AUTH` | The full auth header from **Generate auth header** (optional if Cursor does not require it) |
+
+3. Confirm workflow [`.github/workflows/trigger-daily-geocode.yml`](.github/workflows/trigger-daily-geocode.yml) is on `main`. It runs on the cron in [`.cursor/automation.json`](.cursor/automation.json) (currently **07:00 UTC**, +1 hour after each geocoding run).
+
+### C. Test
+
+**Manual run in GitHub:** Actions → **Trigger daily geocoding** → **Run workflow**.
+
+**Or from a terminal** (replace with your URL and header):
+
+```bash
+curl -fsS -X POST "$CURSOR_AUTOMATION_WEBHOOK_URL" \
+  -H "Content-Type: application/json" \
+  -H "$CURSOR_AUTOMATION_WEBHOOK_AUTH" \
+  -d '{"source":"manual-test"}'
+```
+
+A new run should appear under your automation’s run history in Cursor.
 
 ## Notes
 
