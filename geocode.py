@@ -82,8 +82,9 @@ def load_addresses() -> pd.DataFrame:
 def load_completed_ids() -> set[str]:
     if not OUTPUT_CSV.exists():
         return set()
-    done = pd.read_csv(OUTPUT_CSV, usecols=["safegraph_place_id"], dtype=str)
-    return set(done["safegraph_place_id"].dropna())
+    done = pd.read_csv(OUTPUT_CSV, usecols=["safegraph_place_id", "placekey"], dtype=str)
+    success = done["placekey"].notna() & (done["placekey"] != "")
+    return set(done.loc[success, "safegraph_place_id"].dropna())
 
 
 def build_query(row: pd.Series) -> dict:
@@ -251,6 +252,17 @@ def main() -> None:
                     "queries_this_run": key_processed,
                     "exhausted_at_utc": pd.Timestamp.utcnow().isoformat(),
                     "last_429_message": detail,
+                }
+                break
+
+            if status_code == 401:
+                status = "invalid_key"
+                print(f"[{key_label}] Unauthorized (401), skipping key: {detail}")
+                key_status[key_label] = {
+                    "status": "invalid_key",
+                    "queries_this_run": key_processed,
+                    "invalid_at_utc": pd.Timestamp.utcnow().isoformat(),
+                    "last_401_message": detail,
                 }
                 break
 
