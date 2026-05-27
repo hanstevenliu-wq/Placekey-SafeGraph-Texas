@@ -23,6 +23,7 @@ INPUT_CSV = ROOT / "texas.csv"
 PROGRESS_JSON = OUTPUT_DIR / "progress.json"
 KEY_STATUS_JSON = OUTPUT_DIR / "key_status.json"
 REPORT_ISSUE_JSON = OUTPUT_DIR / "report_issue.json"
+RELEASE_JSON = OUTPUT_DIR / "release.json"
 
 ISSUE_TITLE = "SafeGraph Texas Geocoding — Daily Progress"
 DEFAULT_REPO = "hanstevenliu-wq/Placekey-SafeGraph-Texas"
@@ -124,6 +125,21 @@ def build_report_body(progress: dict, key_status: dict) -> str:
 
     if remaining == 0 and total > 0:
         lines.extend(["", "**Geocoding complete.** All POIs in `texas.csv` have been processed."])
+
+    release_info = load_json(RELEASE_JSON)
+    latest = release_info.get("latest") if release_info else None
+    if latest and latest.get("download_url"):
+        lines.extend(
+            [
+                "",
+                "### Download",
+                "",
+                f"- Latest CSV: [geocoded_results.csv]({latest['download_url']})",
+            ]
+        )
+        if release_info.get("dated", {}).get("download_url"):
+            dated_url = release_info["dated"]["download_url"]
+            lines.append(f"- Today's snapshot: [geocoded_results.csv]({dated_url})")
 
     return "\n".join(lines)
 

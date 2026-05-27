@@ -38,12 +38,14 @@ export placekey_brown="..."
 
 ```bash
 python geocode.py
+python publish_release.py
 python send_report.py
 ```
 
 Output:
 
 - `geocoded_results.csv` — cumulative results (append-only; new rows added each day)
+- [GitHub Release](https://github.com/hanstevenliu-wq/Placekey-SafeGraph-Texas/releases/tag/geocoded-results-latest) — downloadable copy of the cumulative CSV (`geocoded_results.csv`)
 - `output/progress.json` — run summary
 - `output/key_status.json` — per-key quota status
 - GitHub Issue comment — daily progress and exhausted keys
