@@ -49,6 +49,7 @@ Output:
 - `output/progress.json` — run summary
 - `output/key_status.json` — per-key quota status
 - GitHub Issue comment — daily progress and exhausted keys
+- Microsoft Teams message — same summary when `TEAMS_WEBHOOK_URL` or `teams_webhook_url` is set
 
 ## Output columns
 
@@ -65,6 +66,7 @@ Output:
 | `DAILY_LIMIT` | `40000` | Max rows per run |
 | `REQUEST_SLEEP_SECONDS` | `0.2` | Pause between batches |
 | `GITHUB_REPO` | `hanstevenliu-wq/Placekey-SafeGraph-Texas` | Target repo for reports |
+| `TEAMS_WEBHOOK_URL` / `teams_webhook_url` | — | Microsoft Teams Incoming Webhook URL |
 | `CURSOR_API_KEY` | — | Optional: update Cursor automation cron via API |
 | `GIT_COMMIT_SCHEDULE` | `1` | Set `0` to skip git commit in `reschedule_automation.py` |
 
@@ -72,7 +74,7 @@ Output:
 
 1. Push this repo to GitHub.
 2. Create a Cursor Cloud Environment pointing at the repo.
-3. Add the four Placekey secrets and `GITHUB_TOKEN` (issues write) for daily reports.
+3. Add the four Placekey secrets, `GITHUB_TOKEN` (issues write), and `teams_webhook_url` (Teams daily report) for daily reports.
 4. Create a Cursor automation with a **webhook** trigger (recommended). Paste the prompt from [`.cursor/automation-prompt.md`](.cursor/automation-prompt.md) (or run `./daily_run.sh` as the one-line version).
 
 5. Wire the webhook to GitHub Actions (see **Webhook setup** below).
@@ -117,6 +119,28 @@ curl -fsS -X POST "$CURSOR_AUTOMATION_WEBHOOK_URL" \
 ```
 
 A new run should appear under your automation’s run history in Cursor.
+
+## Microsoft Teams daily report
+
+After each run, `send_report.py` posts the same progress summary to a Teams channel when a webhook URL is configured.
+
+### Create the webhook
+
+1. In Teams, open the channel where you want reports.
+2. Click **⋯** → **Connectors** (or **Workflows** → **Post to a channel when a webhook request is received** on newer tenants).
+3. Add an **Incoming Webhook** connector, name it (e.g. “SafeGraph Geocoding”), and copy the webhook URL.
+
+### Add the secret
+
+In your Cursor Cloud Environment, add:
+
+| Secret | Value |
+| --- | --- |
+| `teams_webhook_url` | The Incoming Webhook URL from Teams |
+
+Supported env names: `TEAMS_WEBHOOK_URL`, `teams_webhook_url`, or `TEAMS_WEBHOOK`.
+
+The Teams message includes processed/remaining counts, per-key quota status, alerts for exhausted or invalid keys, and links to the latest CSV and GitHub tracking issue.
 
 ## Notes
 

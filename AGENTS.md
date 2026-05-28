@@ -12,6 +12,7 @@ This repo geocodes SafeGraph Texas POIs from `texas.csv` using the Placekey API 
 | `placekey_icloud` | Placekey API key (10k/day) |
 | `placekey_gmail` | Placekey API key (10k/day) |
 | `placekey_brown` | Placekey API key (10k/day) |
+| `teams_webhook_url` | Microsoft Teams Incoming Webhook URL for daily reports |
 
 GitHub token for daily issue reports comes from the Cursor environment (`GITHUB_TOKEN` / `CURSOR_GITHUB_TOKEN`).
 
@@ -59,3 +60,4 @@ After the first successful run, **snapshot the environment** so `geocoded_result
 | `DAILY_LIMIT` | `40000` | Max rows per run (override for testing) |
 | `REQUEST_SLEEP_SECONDS` | `0.2` | Pause between API batches |
 | `GITHUB_REPO` | `hanstevenliu-wq/Placekey-SafeGraph-Texas` | Repo for issue comments |
+| `TEAMS_WEBHOOK_URL` / `teams_webhook_url` | — | Microsoft Teams Incoming Webhook for daily reports |

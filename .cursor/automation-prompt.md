@@ -16,6 +16,7 @@ Run the daily SafeGraph Texas Placekey geocoding job.
 
 - Use the four Placekey secrets: `placekey_utsa`, `placekey_icloud`, `placekey_gmail`, `placekey_brown`
 - Use `GITHUB_TOKEN` or `CURSOR_GITHUB_TOKEN` (or `gh auth token`) for `send_report.py` and `publish_release.py`
+- Use `TEAMS_WEBHOOK_URL` or `teams_webhook_url` for the Teams daily report from `send_report.py`
 - Do **not** modify `texas.csv` or overwrite `geocoded_results.csv` — only append new rows with successful geocodes
 - `geocoded_results.csv` persists via the Cursor environment snapshot (gitignored)
 
@@ -23,7 +24,7 @@ Run the daily SafeGraph Texas Placekey geocoding job.
 
 - If `geocode.py` completes successfully, `daily_run.sh` always runs `send_report.py`
 - When `geocoded_results.csv` has data rows, `publish_release.py` uploads it to GitHub Releases
-- Report any errors clearly (invalid keys HTTP 401, exhausted keys HTTP 429, missing GitHub token)
+- Report any errors clearly (invalid keys HTTP 401, exhausted keys HTTP 429, missing GitHub token, Teams webhook failure)
 - Commit and push schedule updates from `reschedule_automation.py` to `main`
 - Merge feature-branch changes with `merge_pr.py` when applicable
 
