@@ -7,7 +7,7 @@ name: Trigger daily geocoding
 
 on:
   schedule:
-    - cron: "0 15 * * *"
+    - cron: "0 16 * * *"
   workflow_dispatch:
 
 jobs:
