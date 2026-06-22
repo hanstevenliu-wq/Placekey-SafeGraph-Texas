@@ -1,9 +1,9 @@
 {
   "automation_id": "4f35d02b-292f-42a9-a2cc-1d330dc3974c",
   "timezone": "UTC",
-  "cron": "0 13 * * *",
+  "cron": "0 14 * * *",
   "prompt_file": ".cursor/automation-prompt.md",
   "description": "Daily SafeGraph Texas Placekey geocoding. Hour advances by 1 after each run so API keys get extra rolling-24h reset time.",
-  "last_rescheduled_utc": "2026-06-21T17:25:06.997178+00:00",
-  "previous_cron": "0 12 * * *"
+  "last_rescheduled_utc": "2026-06-22T21:49:27.957773+00:00",
+  "previous_cron": "0 13 * * *"
 }
